@@ -1,0 +1,5 @@
+{
+  "baseUrl": "http://myilc.ilc.org/myilc/help/faq.php",
+  "maxPages": 1000,
+  "maxConcurrency": 1
+}

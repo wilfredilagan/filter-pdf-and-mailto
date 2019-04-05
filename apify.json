@@ -1,0 +1,7 @@
+{
+	"name": "filter-pdf-and-mailto",
+	"version": "0.0",
+	"buildTag": "latest",
+	"env": null,
+	"template": "puppeteer_crawler"
+}
