@@ -43,7 +43,6 @@ Apify.main(async () => {
             await page.setRequestInterception(true);
 
             page.on('request', request => {
-                console.log(request.url);
               if (request.url().endsWith('.pdf')) {
                 request_client({
                   uri: request.url(),
