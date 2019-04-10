@@ -39,25 +39,42 @@ Apify.main(async () => {
                 height: 900,
             },
         }),
-        handlePageFunction: async ({ request, page, response }) => {
-            await page.setRequestInterception(true);
+        gotoFunction: async({request, page}) =>{
+
+          await page.setRequestInterception(true);
 
             page.on('request', request => {
+                //console.log(request.url());
               if (request.url().endsWith('.pdf')) {
-                request_client({
-                  uri: request.url(),
-                  encoding: null,
-                  headers: {
-                    'Content-type': 'applcation/pdf',
-                  },
-                }).then(response => {
-                  console.log(response); // PDF Buffer
-                  request.abort();
-                });
-              } else{
-                request.continue();
-              }
-            });        
+                //request.headers = 'Content-type: applcation/pdf',
+                console.log('in pdf');
+                }
+            request.continue();
+            }); 
+            const response = page.goto(request.url);
+            return response;
+        },
+        handlePageFunction: async ({ request, page, response }) => {
+            // await page.setRequestInterception(true);
+
+            // page.on('request', request => {
+            //     //console.log(request.url());
+            //   if (request.url().endsWith('.pdf')) {
+            //     request_client({
+            //       uri: request.url(),
+            //       encoding: null,
+            //       headers: {
+            //         'Content-type': 'applcation/pdf',
+            //       },
+            //     }).then(response => {
+            //       console.log(response); // PDF Buffer
+            //       request.abort();
+            //     });
+            //     console.log('in pdf');
+            //   } else{
+            //     request.continue();
+            //   }
+            // });        
 
             if (request.url == "https://www.tvo.org/more"){
                 request = null;
@@ -133,6 +150,8 @@ Apify.main(async () => {
 
     await crawler.run();
 
+    
+
     console.log('Crawling finished, processing results...');
 
     // Create a look-up table for normalized URL->record,
@@ -147,6 +166,7 @@ Apify.main(async () => {
         });
     });
 
+    
     // Array of normalized URLs to process
     const pendingUrls = [
         normalizeUrl(input.baseUrl),
