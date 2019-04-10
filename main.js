@@ -44,95 +44,65 @@ Apify.main(async () => {
           await page.setRequestInterception(true);
 
             page.on('request', request => {
-                //console.log(request.url());
-              if (request.url().endsWith('.pdf')) {
-                //request.headers = 'Content-type: applcation/pdf',
-                console.log('in pdf');
-                }
+              
             request.continue();
             }); 
             const response = page.goto(request.url);
             return response;
         },
         handlePageFunction: async ({ request, page, response }) => {
-            // await page.setRequestInterception(true);
 
-            // page.on('request', request => {
-            //     //console.log(request.url());
-            //   if (request.url().endsWith('.pdf')) {
-            //     request_client({
-            //       uri: request.url(),
-            //       encoding: null,
-            //       headers: {
-            //         'Content-type': 'applcation/pdf',
-            //       },
-            //     }).then(response => {
-            //       console.log(response); // PDF Buffer
-            //       request.abort();
-            //     });
-            //     console.log('in pdf');
-            //   } else{
-            //     request.continue();
-            //   }
-            // });        
+            const url = normalizeUrl(request.url);
+            console.log(`Analysing page: ${url}`);
 
-            if (request.url == "https://www.tvo.org/more"){
-                request = null;
-                record = null;
-            } else {
+            const record = {
+                url,
+                isBaseWebsite: false,
+                httpStatus: response.status(),
+                title: await page.title(),
+                linkUrls: null,
+                anchors: null,
+            };
 
-                const url = normalizeUrl(request.url);
-                console.log(`Analysing page: ${url}`);
-
-                const record = {
-                    url,
-                    isBaseWebsite: false,
-                    httpStatus: response.status(),
-                    title: await page.title(),
-                    linkUrls: null,
-                    anchors: null,
-                };
-
-                if (response.status() !== 200) {
-                    console.log('ALERT');
-                    console.dir(request);
-                    console.dir(record);
-                    console.dir(response);
-                }
-
-                // If we're on the base website, find links to new pages and enqueue them
-                if (purlBase.matches(url)) {
-                    record.isBaseWebsite = true;
-                    console.log(`[${url}] Enqueuing links`);
-                    const infos = await Apify.utils.enqueueLinks({
-                    page,
-                    requestQueue,
-                    selector: 'a:not([href^="mailto"]):not([href^="javascript"])',
-                    });
-                    let links = _.map(infos, (info) => info.request.url).sort();
-                    record.linkUrls = _.uniq(links, true);
-                }
-
-                // Find all HTML element IDs and <a name="xxx"> anchors,
-                // basically anything that can be addressed by #fragment
-                record.anchors = await page.evaluate(() => {
-                    const anchors = [];
-                    document.querySelectorAll('body a[name]').forEach((elem) => {
-                        const name = elem.getAttribute('name');
-                        if (name) anchors.push(name);
-                    });
-                    document.querySelectorAll('body [id]').forEach((elem) => {
-                        const id = elem.getAttribute('id');
-                        if (id) anchors.push(id);
-                    });
-                    return anchors;
-                });
-                record.anchors.sort();
-                record.anchors = _.uniq(record.anchors, true);
-
-                // Save results
-                await Apify.pushData(record);
+            if (response.status() !== 200) {
+                console.log('ALERT');
+                console.dir(request);
+                console.dir(record);
+                console.dir(response);
             }
+
+            // If we're on the base website, find links to new pages and enqueue them
+            if (purlBase.matches(url)) {
+                record.isBaseWebsite = true;
+                console.log(`[${url}] Enqueuing links`);
+                const infos = await Apify.utils.enqueueLinks({
+                page,
+                requestQueue,
+                selector: 'a:not([href^="mailto"]):not([href^="javascript"])',
+                });
+                let links = _.map(infos, (info) => info.request.url).sort();
+                record.linkUrls = _.uniq(links, true);
+            }
+
+            // Find all HTML element IDs and <a name="xxx"> anchors,
+            // basically anything that can be addressed by #fragment
+            record.anchors = await page.evaluate(() => {
+                const anchors = [];
+                document.querySelectorAll('body a[name]').forEach((elem) => {
+                    const name = elem.getAttribute('name');
+                    if (name) anchors.push(name);
+                });
+                document.querySelectorAll('body [id]').forEach((elem) => {
+                    const id = elem.getAttribute('id');
+                    if (id) anchors.push(id);
+                });
+                return anchors;
+            });
+            record.anchors.sort();
+            record.anchors = _.uniq(record.anchors, true);
+
+            // Save results
+            await Apify.pushData(record);
         },
 
         // This function is called if the page processing failed more than maxRequestRetries+1 times.
@@ -272,7 +242,7 @@ Apify.main(async () => {
             color = 'orange';
             description = 'URL fragment not found';
         }
-        if (link.httpStatus !== 200){
+        if (link.httpStatus !== 200 && link.url !== 'https://www.tvo.org/more'){
             html += `<tr style="background-color: ${color}">
                 <td><a href="${result.url}" target="_blank">${result.url}</a></td>
                 <td><a href="${link.url}" target="_blank">${link.url}</a></td>
