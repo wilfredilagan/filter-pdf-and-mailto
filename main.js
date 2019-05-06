@@ -33,23 +33,23 @@ Apify.main(async () => {
         maxRequestsPerCrawl: input.maxPages,
         maxRequestRetries: 3,
         maxConcurrency: input.maxConcurrency,
+        puppeteerPoolOptions: {
+            maxOpenPagesPerInstance: 1,
+            retireInstanceAfterRequestCount: 1
+        },
+        autoscaledPoolOptions: {
+            minConcurrency: 1,
+            desiredConcurrencyRatio: 1,
+            scaleDownStepRatio: 0.5,
+            autoscaleIntervalSecs: 5
+
+        },
         launchPuppeteerFunction: async () => Apify.launchPuppeteer({
             defaultViewport: {
                 width: 1200,
                 height: 900,
             },
         }),
-        gotoFunction: async({request, page}) =>{
-
-          await page.setRequestInterception(true);
-
-            page.on('request', request => {
-              
-            request.continue();
-            }); 
-            const response = page.goto(request.url);
-            return response;
-        },
         handlePageFunction: async ({ request, page, response }) => {
 
             const url = normalizeUrl(request.url);
@@ -181,6 +181,7 @@ Apify.main(async () => {
             };
 
             const record = urlToRecord[linkNurl];
+            console.log(record);
             if (!record) {
                 // Page was not crawled at all...
                 result.links.push(link);
