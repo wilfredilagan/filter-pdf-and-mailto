@@ -52,6 +52,9 @@ Apify.main(async () => {
                 height: 900,
             },
         }),
+        gotoFunction: async ({request, page}) =>{
+            return page.goto(request.url, {"waitUntil":["load", "networkidle2"]})
+        },
         handlePageFunction: async ({ request, page, response }) => {
 
             const url = normalizeUrl(request.url);
