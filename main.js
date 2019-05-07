@@ -36,8 +36,8 @@ Apify.main(async () => {
         puppeteerPoolOptions: {
             maxOpenPagesPerInstance: 20,
             instanceKillerIntervalSecs: 5,
-            retireInstanceAfterRequestCount: 50,
-            killInstanceAfterSecs: 6
+            retireInstanceAfterRequestCount: 30,
+            killInstanceAfterSecs: 20
         },
         autoscaledPoolOptions: {
             minConcurrency: 1,
